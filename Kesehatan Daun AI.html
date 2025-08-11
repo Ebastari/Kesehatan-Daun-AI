@@ -1,0 +1,441 @@
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Analisis Kesehatan Daun — Tanaman Reklamasi</title>
+
+<!-- Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;margin:12px;background:#f7fafc;color:#111827}
+  h1{text-align:center;margin-bottom:8px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .card{background:#fff;padding:12px;border-radius:8px;box-shadow:0 2px 8px rgba(15,23,42,0.06)}
+  video, canvas{border-radius:8px;display:block;max-width:100%}
+  #video{width:320px;height:240px;background:#000;object-fit:cover}
+  #canvas{width:320px;height:320px;background:#eee}
+  button,input[type=file]{margin:6px;padding:8px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;cursor:pointer}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{padding:6px;border:1px solid #e6edf3;text-align:left;font-size:0.95rem}
+  .small{font-size:0.9rem;color:#475569}
+  .status{font-weight:700}
+  .green{color:#047857}
+  .orange{color:#d97706}
+  .red{color:#b91c1c}
+  footer{font-size:0.8rem;color:#6b7280;margin-top:12px;text-align:center}
+  @media (max-width:760px){ .row{flex-direction:column;align-items:center} }
+</style>
+</head>
+<body>
+  <h1>
+  Analisis Kesehatan Tanaman Reklamasi<br>
+  PT Energi Batubara Lestari
+</h1>
+
+
+  <div class="row">
+    <!-- Left: Camera / Controls -->
+    <div class="card" style="min-width:340px">
+      <div class="small">Kamera / Upload</div>
+      <video id="video" autoplay playsinline></video>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+        <button id="btnStart">▶ Mulai Kamera</button>
+        <button id="btnSwitch">🔄 Ganti Kamera</button>
+        <button id="btnCapture">📷 Ambil Foto</button>
+        <input id="upload" type="file" accept="image/*">
+        <button id="btnClear">🧹 Reset</button>
+      </div>
+      <div class="small" style="margin-top:6px">Izinkan akses kamera. Jika kamera tidak tersedia, gunakan Upload.</div>
+    </div>
+
+    <!-- Middle: Canvas + Score + Chart -->
+    <div class="card" style="min-width:360px">
+      <div class="small">Gambar & Visual</div>
+      <canvas id="canvas" width="320" height="320"></canvas>
+
+      <div style="display:flex;gap:12px;margin-top:8px;align-items:center;">
+        <div style="flex:1">
+          <div class="small">Skor Kesehatan</div>
+          <div id="score" style="font-size:1.2rem;font-weight:700">—</div>
+          <div id="healthLabel" class="small">—</div>
+        </div>
+        <div style="width:180px">
+          <canvas id="chart" width="180" height="140"></canvas>
+        </div>
+      </div>
+
+      <div style="margin-top:8px;display:flex;gap:8px;">
+        <button id="btnDownloadPDF">⬇ Unduh Laporan (PDF)</button>
+      </div>
+    </div>
+
+    <!-- Right: Table + Diagnosis -->
+    <div class="card" style="min-width:360px">
+      <div class="small">Tabel Persentase Warna</div>
+      <table>
+        <thead><tr><th>Kategori</th><th>Count</th><th>% dari total</th></tr></thead>
+        <tbody id="tableBody">
+          <tr><td>Sehat (Hijau)</td><td id="cntSehat">0</td><td id="pctSehat">0%</td></tr>
+          <tr><td>Kuning</td><td id="cntKuning">0</td><td id="pctKuning">0%</td></tr>
+          <tr><td>Coklat</td><td id="cntCoklat">0</td><td id="pctCoklat">0%</td></tr>
+          <tr><td>Putih (jamur)</td><td id="cntPutih">0</td><td id="pctPutih">0%</td></tr>
+          <tr><td>Hitam / gelap</td><td id="cntHitam">0</td><td id="pctHitam">0%</td></tr>
+        </tbody>
+      </table>
+
+      <div id="analysisText" class="small" style="margin-top:8px"></div>
+      <div id="controlAdvice" class="small" style="margin-top:8px"></div>
+      <div id="nutrientNote" class="small" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <footer>MONTANA — Analisis Kesehatan Daun. Hasil bersifat indikatif; untuk diagnosis pasti lakukan uji laboratorium & evaluasi lapangan.</footer>
+
+<script>
+/* ---------- Elemen ---------- */
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const upload = document.getElementById('upload');
+const btnStart = document.getElementById('btnStart');
+const btnSwitch = document.getElementById('btnSwitch');
+const btnCapture = document.getElementById('btnCapture');
+const btnClear = document.getElementById('btnClear');
+const btnDownloadPDF = document.getElementById('btnDownloadPDF');
+
+let currentStream = null;
+let useFront = false;
+let pieChart = null;
+
+/* ---------- Kamera ---------- */
+async function startCamera(){
+  if (currentStream) currentStream.getTracks().forEach(t=>t.stop());
+  try {
+    const constraints = { video: { facingMode: useFront ? 'user' : 'environment' } };
+    const s = await navigator.mediaDevices.getUserMedia(constraints);
+    currentStream = s;
+    video.srcObject = s;
+    await video.play();
+  } catch (e) {
+    console.warn('camera error', e);
+    alert('Gagal mengakses kamera. Periksa izin atau gunakan Upload.');
+  }
+}
+btnStart.addEventListener('click', startCamera);
+btnSwitch.addEventListener('click', ()=>{ useFront = !useFront; startCamera(); });
+btnCapture.addEventListener('click', ()=>{
+  if (video.videoWidth && video.videoHeight) {
+    // draw scaled
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    analyzeCanvas();
+  } else alert('Video belum siap — tunggu atau gunakan upload.');
+});
+
+/* ---------- Upload ---------- */
+upload.addEventListener('change', (ev)=>{
+  const f = ev.target.files && ev.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const cw = canvas.width, ch = canvas.height;
+      const ratio = Math.min(cw/img.width, ch/img.height);
+      const iw = img.width * ratio, ih = img.height * ratio;
+      const dx = (cw - iw)/2, dy = (ch - ih)/2;
+      ctx.fillStyle = '#fff'; ctx.fillRect(0,0,cw,ch);
+      ctx.drawImage(img, dx, dy, iw, ih);
+      analyzeCanvas();
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(f);
+});
+
+/* ---------- Reset ---------- */
+btnClear.addEventListener('click', ()=>{
+  ctx.fillStyle = '#eee'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  updateCounts({sehat:0,kuning:0,coklat:0,putih:0,hitam:0}, canvas.width*canvas.height);
+  document.getElementById('score').innerText = '—';
+  document.getElementById('healthLabel').innerText = '—';
+  document.getElementById('analysisText').innerHTML = '';
+  document.getElementById('controlAdvice').innerHTML = '';
+  document.getElementById('nutrientNote').innerHTML = '';
+  if (pieChart) { pieChart.destroy(); pieChart = null; }
+});
+
+/* ---------- Helper: RGB -> HSV ---------- */
+function rgbToHsv(r,g,b){
+  r/=255; g/=255; b/=255;
+  let max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h=0, s=0, v=max;
+  let d = max-min;
+  s = max === 0 ? 0 : d / max;
+  if (d !== 0) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = ((b - r) / d) + 2;
+    else h = ((r - g) / d) + 4;
+    h = Math.round(h * 60);
+    if (h < 0) h += 360;
+  } else h = 0;
+  return [h, Math.round(s*100), Math.round(v*100)];
+}
+
+/* ---------- Analisis: canvas -> kategori ---------- */
+function analyzeCanvas(){
+  const w = canvas.width, h = canvas.height;
+  const img = ctx.getImageData(0,0,w,h);
+  const d = img.data;
+  let cnt = {sehat:0,kuning:0,coklat:0,putih:0,hitam:0};
+  let pixelCount = 0;
+
+  for (let i=0;i<d.length;i+=4){
+    const r=d[i], g=d[i+1], b=d[i+2], a=d[i+3];
+    if (a === 0) continue; // skip transparent
+    pixelCount++;
+    const [H,S,V] = rgbToHsv(r,g,b);
+
+    // urut prioritas: putih (powdery/residu) -> hitam -> hijau -> kuning -> coklat -> fallback
+    if (V >= 85 && S <= 20) { cnt.putih++; continue; }
+    if (V <= 15) { cnt.hitam++; continue; }
+    if (H >= 60 && H <= 160 && S > 25 && V > 25) { cnt.sehat++; continue; }
+    if (H >= 20 && H < 60 && S > 20 && V > 30) { cnt.kuning++; continue; }
+    if ((H >= 0 && H < 40 && S > 25 && V < 70) || (H >= 10 && H <= 40 && S > 40)) { cnt.coklat++; continue; }
+
+    // fallback heuristic
+    if (S > 20 && V > 30 && H >= 40 && H <= 180) cnt.sehat++;
+    else cnt.coklat++;
+  }
+
+  updateCounts(cnt, pixelCount);
+  computeHealthAndAdvice(cnt, pixelCount);
+}
+
+/* ---------- Update UI & Pie ---------- */
+function updateCounts(cnt, total){
+  const pct = k => total ? (cnt[k]/total*100) : 0;
+  document.getElementById('cntSehat').innerText = cnt.sehat.toLocaleString();
+  document.getElementById('cntKuning').innerText = cnt.kuning.toLocaleString();
+  document.getElementById('cntCoklat').innerText = cnt.coklat.toLocaleString();
+  document.getElementById('cntPutih').innerText = cnt.putih.toLocaleString();
+  document.getElementById('cntHitam').innerText = cnt.hitam.toLocaleString();
+
+  document.getElementById('pctSehat').innerText = pct('sehat').toFixed(2) + '%';
+  document.getElementById('pctKuning').innerText = pct('kuning').toFixed(2) + '%';
+  document.getElementById('pctCoklat').innerText = pct('coklat').toFixed(2) + '%';
+  document.getElementById('pctPutih').innerText = pct('putih').toFixed(2) + '%';
+  document.getElementById('pctHitam').innerText = pct('hitam').toFixed(2) + '%';
+
+  drawPie([pct('sehat'), pct('kuning'), pct('coklat'), pct('putih'), pct('hitam')]);
+}
+
+/* ---------- Health score, diagnosis & advices (dilengkapi narasi ilmiah) ---------- */
+function computeHealthAndAdvice(cnt, total){
+  const pct = key => total ? (cnt[key]/total*100) : 0;
+  const sehatPct = pct('sehat');
+  const othersPct = pct('kuning') + pct('coklat') + pct('putih') + pct('hitam');
+
+  // skor: hijau% - 0.7*(others%)
+  let score = sehatPct - 0.7 * othersPct;
+  score = Math.max(0, Math.min(100, score));
+  document.getElementById('score').innerText = score.toFixed(2);
+
+  let labelHTML = '';
+if (score > 50) {
+  labelHTML = `<span class="status green">Sehat</span>`;
+} else {
+  labelHTML = `<span class="status red">Tidak Sehat</span>`;
+}
+document.getElementById('healthLabel').innerHTML = labelHTML;
+
+
+  // Dominant category
+  const map = {
+    'Sehat (Hijau)': sehatPct,
+    'Kuning': pct('kuning'),
+    'Coklat': pct('coklat'),
+    'Putih (jamur/residu)': pct('putih'),
+    'Hitam (bakteri/nekrosis)': pct('hitam')
+  };
+  const dominant = Object.keys(map).reduce((a,b)=> map[a] > map[b] ? a : b);
+
+  // Detailed narrative per dominant (lebih panjang & ilmiah)
+  let diagTitle='', diagText='', control='', nutrientNote='';
+
+  if (dominant === 'Sehat (Hijau)') {
+    diagTitle = 'Tanaman dominan sehat — kondisi fisiologis optimal';
+    diagText =
+      'Daun mayoritas berwarna hijau menandakan kandungan klorofil cukup dan aktivitas fotosintesis berjalan baik. ' +
+      'Kondisi ini umumnya menunjukkan suplai nutrisi makro dan mikro yang seimbang, pengairan adekuat, serta minim stres abiotik atau serangan patogen. ' +
+      'Pemeliharaan yang konsisten (pemupukan berimbang, pengairan, sanitasi) direkomendasikan untuk menjaga stabilitas pertumbuhan.';
+    control = 'Lanjutkan praktik perawatan saat ini: pemupukan berkala sesuai kebutuhan tanaman, pemantauan hama/penyakit, serta rotasi untuk menjaga kesuburan tanah.';
+    nutrientNote = 'Catatan: tetap lakukan uji tanah berkala (setiap 3–6 bulan) untuk memastikan parameter seperti pH, N, P, K, Mg dalam rentang optimal.';
+  }
+  else if (dominant === 'Kuning') {
+    diagTitle = 'Klorosis dominan — kemungkinan defisiensi nitrogen atau stress fisiologis';
+    diagText =
+      'Klorosis (kuning) sering berkaitan dengan defisiensi Nitrogen (N) yang mengurangi sintesis klorofil, sehingga menurunkan efisiensi fotosintesis. ' +
+      'Alternatif penyebab termasuk defisiensi Mg (interveinal chlorosis), gangguan vaskular seperti layu Fusarium yang menghalangi transpor air dan nutrisi, atau stres air (over/under-watering). ' +
+      'Dalam literatur agronomi, defisiensi N menghasilkan penurunan pertumbuhan vegetatif dan penipisan warna hijau secara seragam pada daun tua.';
+    control =
+      '1) Lakukan uji tanah dan tissue untuk menentukan kadar N & Mg. ' +
+      '2) Jika N rendah: aplikasi pupuk nitrogen (mis. urea atau NPK dengan proporsi N lebih tinggi) sesuai dosis rekomendasi tanaman. ' +
+      '3) Perbaiki irigasi — hindari genangan; pastikan drainase baik. ' +
+      '4) Jika dicurigai Fusarium: rotasi tanaman, sanitasi peralatan, dan gunakan varietas tahan bila tersedia.';
+    nutrientNote =
+      'Implikasi nutrisi: defisiensi N → beri pupuk N; defisiensi Mg → gunakan magnesium sulfat (Epsom salt) atau dolomit. ' +
+      'Perhatikan pH tanah (pH ekstrem dapat menyebabkan lock-out nutrisi).';
+  }
+  else if (dominant === 'Coklat') {
+    diagTitle = 'Nekrosis / bercak coklat — kemungkinan patogen jamur atau kekurangan K / sunburn';
+    diagText =
+      'Area coklat menandakan nekrosis jaringan — bisa akibat patogen seperti Alternaria atau Botrytis, defisiensi Kalium (K) yang melemahkan turgor & kekuatan jaringan, ' +
+      'atau kerusakan akibat paparan radiasi matahari berlebih (sunburn). Patogen jamur cenderung membentuk lesi terlokalisir yang dapat meluas pada kondisi lembap.';
+    control =
+      '1) Lakukan identifikasi patogen jika memungkinkan (lab/observasi bercak). ' +
+      '2) Aplikasi fungisida (mis. mankozeb/klorotalonil) bila patogen jamur terindikasi; ikuti label penggunaan. ' +
+      '3) Tambah pupuk Kalium (KCl atau K2SO4) untuk memperkuat jaringan dan toleransi terhadap stress abiotik. ' +
+      '4) Gunakan shading bila cahaya terlalu intens pada fase sensitif tanaman.';
+    nutrientNote =
+      'Peran K: meningkatkan regulasi stomata, kekuatan dinding sel, dan toleransi terhadap penyakit; uji tanah dianjurkan sebelum aplikasi K berlebih.';
+  }
+  else if (dominant === 'Putih (jamur/residu)') {
+    diagTitle = 'Bercak putih — kemungkinan powdery mildew (jamur) atau residu aplikasi';
+    diagText =
+      'Lapisan putih atau bercak abu-abu di permukaan daun paling sering dikaitkan dengan Powdery Mildew (Erysiphales), yang tumbuh baik pada kondisi kelembapan sedang hingga tinggi dengan sirkulasi udara buruk. ' +
+      'Kadang bercak putih juga berasal dari residu pestisida/pupuk daun yang mengering pada permukaan.';
+    control =
+      '1) Lakukan sanitasi: pangkas bagian rapat untuk meningkatkan sirkulasi udara. ' +
+      '2) Terapkan fungisida berbasis sulfur atau kalium bikarbonat sesuai label untuk mengendalikan powdery mildew. ' +
+      '3) Hindari aplikasi foliar saat panas siang untuk mengurangi residu dan fitotoksisitas.';
+    nutrientNote =
+      'Powdery mildew bukan langsung terkait defisiensi nutrisi, namun tanaman dengan kondisi nutrisi buruk lebih rentan. Perbaiki manajemen nutrisi secara menyeluruh.';
+  }
+  else { // Hitam
+    diagTitle = 'Bercak hitam / gelap — indikasi nekrosis berat atau infeksi bakteri';
+    diagText =
+      'Bercak hitam menunjukkan nekrosis lanjut atau infeksi bakteri (contoh: bacterial blight) yang menyebabkan kematian jaringan. ' +
+      'Kondisi lembap, luka mekanik, atau frost dapat mempercepat perkembangan gejala ini. Jaringan yang menghitam sering menunjukkan titik-titik penyebaran patogen aktif.';
+    control =
+      '1) Pisahkan dan buang bagian tanaman yang terinfeksi; jangan kompos jika patogen dapat bertahan. ' +
+      '2) Desinfeksi alat potong; gunakan bakterisida berbasis tembaga bila direkomendasikan. ' +
+      '3) Kurangi kelembapan di area kanopi, perbaiki drainase, dan konsultasikan spesialis penyakit bila meluas.';
+    nutrientNote =
+      'Perbaikan nutrisi tidak selalu menyembuhkan infeksi bakteri, tetapi kondisi tanaman yang sehat dapat meningkatkan resistensi. Pengendalian penyakit utama tetap prioritas.';
+  }
+
+  // Tampilkan
+  document.getElementById('analysisText').innerHTML = `<b>${diagTitle}</b><div style="margin-top:6px">${diagText}</div>`;
+  document.getElementById('controlAdvice').innerHTML = `<b>Rekomendasi Pengendalian:</b><div style="margin-top:6px">${control}</div>`;
+  document.getElementById('nutrientNote').innerHTML = `<b>Catatan Nutrisi & Laboratorium:</b><div style="margin-top:6px">${nutrientNote}</div>`;
+}
+
+/* ---------- Pie chart ---------- */
+function drawPie(percentages){
+  const ctxc = document.getElementById('chart').getContext('2d');
+  if (pieChart) pieChart.destroy();
+  pieChart = new Chart(ctxc, {
+    type: 'pie',
+    data: {
+      labels: ['Sehat (Hijau)','Kuning','Coklat','Putih','Hitam'],
+      datasets:[{
+        data: percentages,
+        backgroundColor: ['#16a34a','#f59e0b','#7c3aed','#e6e6e6','#111827'],
+        borderColor:'#fff', borderWidth:1
+      }]
+    },
+    options:{responsive:true,plugins:{legend:{position:'bottom'}}}
+  });
+}
+
+/* ---------- PDF Export (jsPDF + autotable) ---------- */
+btnDownloadPDF.addEventListener('click', async ()=>{
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+  const left = 40;
+  let y = 40;
+  doc.setFontSize(16);
+  doc.text("Laporan Analisis Kesehatan Tanaman PT Energi Batubara Lestari ", left, y);
+  y += 22;
+  doc.setFontSize(11);
+  const score = document.getElementById('score').innerText;
+  const healthLabel = document.getElementById('healthLabel').innerText.replace(/\n/g,' ');
+  doc.text(`Skor Kesehatan: ${score}`, left, y); y += 14;
+  doc.text(`Status: ${healthLabel}`, left, y); y += 18;
+
+  // Diagnosis ringkas
+  const analysisText = document.getElementById('analysisText').innerText;
+  const controlAdvice = document.getElementById('controlAdvice').innerText;
+  const nutrientNote = document.getElementById('nutrientNote').innerText;
+
+  doc.setFontSize(12);
+  doc.text("Diagnosis Ringkas:", left, y); y += 14;
+  doc.setFontSize(10);
+  const splitA = doc.splitTextToSize(analysisText, 520);
+  doc.text(splitA, left, y); y += splitA.length * 12 + 6;
+
+  doc.setFontSize(12);
+  doc.text("Rekomendasi Pengendalian:", left, y); y += 14;
+  doc.setFontSize(10);
+  const splitC = doc.splitTextToSize(controlAdvice, 520);
+  doc.text(splitC, left, y); y += splitC.length * 12 + 6;
+
+  doc.setFontSize(12);
+  doc.text("Catatan Nutrisi / Laboratorium:", left, y); y += 14;
+  doc.setFontSize(10);
+  const splitN = doc.splitTextToSize(nutrientNote, 520);
+  doc.text(splitN, left, y); y += splitN.length * 12 + 10;
+
+  // Tambah tabel warna
+  const rows = [];
+  document.querySelectorAll('#tableBody tr').forEach(tr=>{
+    const tds = tr.querySelectorAll('td');
+    rows.push([tds[0].innerText, tds[1].innerText, tds[2].innerText]);
+  });
+  doc.autoTable({
+    head:[['Kategori','Count','%']],
+    body: rows,
+    startY: y,
+    margin: {left},
+    styles: {fontSize:10}
+  });
+  y = doc.lastAutoTable.finalY + 10;
+
+  // Tambah chart (gambar)
+  try {
+    const chartCanvas = document.getElementById('chart');
+    const imgData = chartCanvas.toDataURL('image/png', 1.0);
+    const imgW = 220, imgH = 140;
+    doc.addImage(imgData, 'PNG', left, y, imgW, imgH);
+    y += imgH + 10;
+  } catch (err) {
+    console.warn('Chart export error', err);
+  }
+
+  // Tambah referensi singkat (DOI)
+  const refs = [
+    'Panduan: Nitrogen deficiency — S. N. Pandey & B. K. Sinha (Plant Physiology, 2009) [lihat literatur terkait]',
+    'Magnesium & Chlorosis — Frontiers in Plant Science (2020). DOI: 10.3389/fpls.2020.00563',
+    'Alternaria spp. & leaf spots — Plant Disease (2019). DOI: 10.1094/PDIS-05-18-0732-RE',
+    'Powdery mildew overview — various review articles. DOI contoh: 10.1080/00275514.2017.1307321'
+  ];
+  doc.setFontSize(12);
+  doc.text('Referensi & Bacaan:', left, y); y += 14;
+  doc.setFontSize(9);
+  refs.forEach(r=>{
+    const splitR = doc.splitTextToSize('• ' + r, 520);
+    doc.text(splitR, left, y);
+    y += splitR.length * 10 + 4;
+  });
+
+  doc.save(`laporan_kesehatan_daun_${(new Date()).toISOString().slice(0,19).replace(/[:T]/g,'_')}.pdf`);
+});
+
+/* ---------- Inisialisasi canvas kosong ---------- */
+ctx.fillStyle = '#eee'; ctx.fillRect(0,0,canvas.width,canvas.height);
+</script>
+</body>
+</html>
