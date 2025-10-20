@@ -1,210 +1,229 @@
+backgroundColor:['#16a34a','#facc15','#b45309','#e5e7eb','#111827']
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>MONTANA — Analisis Kesehatan Daun</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<title>MONTANA — Chatbot Analisis Daun</title>
 
 <!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
 <!-- Libraries -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-  :root{
-    --bg:#0ea5e9; --bg2:#22c55e; --card:#ffffff; --txt:#0f172a; --muted:#64748b;
-  }
-  *{box-sizing:border-box}
-  body{font-family:'Inter',system-ui,Arial,sans-serif;margin:0;background:#f8fafc;color:var(--txt)}
-  .hero{background:linear-gradient(135deg,var(--bg),var(--bg2));color:#fff;padding:16px 12px 18px;text-align:center;box-shadow:0 2px 10px rgba(2,6,23,.15)}
-  .hero h1{margin:4px 0 6px;font-size:1.2rem}
-  .hero .sub{opacity:.95;font-size:.9rem}
-  .wrap{padding:12px}
-  .row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
-  .card{background:var(--card);border-radius:14px;box-shadow:0 8px 24px rgba(2,6,23,.06);border:1px solid #eef2f7;padding:12px;width:100%;max-width:400px}
-  .title{font-weight:700;font-size:.95rem;margin-bottom:8px}
-  video,canvas{border-radius:12px;width:100%;height:auto;max-height:280px;background:#0b0b0b}
-  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  button,.file{flex:1;padding:10px 12px;border-radius:10px;border:1px solid #dbe7f3;background:#fff;cursor:pointer;font-weight:600;font-size:.92rem}
-  button:active{transform:scale(.98)}
-  .btn-primary{background:#10b981;color:#fff;border-color:#10b981}
-  .btn-secondary{background:#e2e8f0}
-  .small{font-size:.85rem;color:var(--muted)}
-  table{width:100%;border-collapse:collapse;margin-top:6px;font-size:.9rem}
-  th,td{border:1px solid #e2e8f0;padding:6px 8px;text-align:left}
-  .status-chip{display:inline-flex;align-items:center;gap:6px;font-weight:700;padding:4px 8px;border-radius:999px;border:1px solid #d1d5db}
-  .ok{background:#ecfdf5;color:#065f46}
-  .bad{background:#fef2f2;color:#7f1d1d}
-  .bar{height:10px;background:#eef2f7;border-radius:999px;overflow:hidden;margin-top:6px;outline:1px solid #e5edf6}
-  .bar>span{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);width:0}
-  .dominant{background:#f1f5f9;border:1px dashed #cbd5e1;padding:8px;border-radius:10px;margin-top:8px;font-size:.88rem}
-  .legend-dot{width:10px;height:10px;border-radius:999px;display:inline-block;margin-right:6px;vertical-align:middle}
-  footer{font-size:.78rem;color:#64748b;text-align:center;padding:10px 0 14px}
+:root{
+  --bg:#0b141a; --panel:#0f1a1f; --header:#162126; --ink:#e9edef; --muted:#aebac1;
+  --bot:#1b2a31; --user:#dcf8c6; --accent:#00a884; --line:rgba(255,255,255,.08);
+  --card:#152126; --danger:#fca5a5; --ok:#86efac;
+  --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom);
+}
+@media (prefers-color-scheme: dark){
+  :root{ color-scheme:dark; }
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+html,body{height:100%}
+body{margin:0;font-family:'Inter',system-ui,Arial;background:var(--bg);color:var(--ink);overscroll-behavior-y:none}
+.app{min-height:100svh;display:flex;flex-direction:column;background:var(--panel)}
+.header{display:flex;gap:12px;align-items:center;background:var(--header);padding:12px 14px calc(12px + var(--safe-top));border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.header .avatar{width:38px;height:38px;border-radius:50%;object-fit:cover}
+.header .title{font-weight:700;font-size:15px}
+.header .sub{font-size:12px;color:var(--muted)}
+.banner{padding:8px 14px;border-bottom:1px solid var(--line);color:var(--muted);font-size:13px}
+.chat{flex:1;overflow-y:auto;scroll-behavior:smooth;padding:14px 10px;display:flex;flex-direction:column;gap:10px;background:var(--panel)}
+.row{display:flex;width:100%}
+.row.bot{justify-content:flex-start}
+.row.user{justify-content:flex-end}
+.bubble{border-radius:16px;padding:10px 12px;line-height:1.55;font-size:15px;max-width:92%;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.bubble.bot{background:var(--bot);border-bottom-left-radius:6px}
+.bubble.user{background:var(--user);color:#111;border-bottom-right-radius:6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;color:#d4e2e7}
+.thumb{width:100%;border-radius:10px;background:#0b0b0b}
+.table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+.table th,.table td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left}
+.table th{color:#bcd0d7}
+.badge{display:inline-flex;align-items:center;gap:6px;font-weight:700;padding:4px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px}
+.ok{background:#163628;color:#9de7c6}
+.bad{background:#3a1b1b;color:#f5a1a1}
+.progress{height:10px;background:#132128;border-radius:999px;overflow:hidden;border:1px solid var(--line);margin-top:6px}
+.progress>span{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);width:0}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn{padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#20363d;color:#e9edef;cursor:pointer;font-weight:700;font-size:14px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.legend-dot{width:10px;height:10px;border-radius:999px;display:inline-block;margin-right:6px;vertical-align:middle}
+.hint{color:var(--muted);font-size:12px}
+.k-pill{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;background:#1e2e35;border:1px solid var(--line);font-size:12px}
+/* Bottom bar */
+.bbar{position:sticky;bottom:0;background:#0f1e23;border-top:1px solid var(--line);padding:10px 12px calc(10px + var(--safe-bottom));display:flex;gap:10px;align-items:center}
+.bbar .actions{display:flex;gap:10px;margin-left:auto}
+.action{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:999px;border:1px solid var(--line);background:#20363d;color:#e9edef;cursor:pointer;font-weight:800;font-size:15px;min-width:120px;justify-content:center}
+.action.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+input[type=file]{display:none}
+/* Hidden lab */
+#lab{display:none}
+/* Mobile tweaks */
+@media (max-width:480px){
+  .bubble{max-width:96%; font-size:15px}
+  .btn{font-size:15px}
+  .action{min-width:auto;padding:12px 14px}
+}
 </style>
 </head>
 <body>
-
-<section class="hero">
-  <h1>MONTANA — Analisis Kesehatan Daun</h1>
-  <div class="sub">PT Energi Batubara Lestari • Teknis Lapangan</div>
-</section>
-
-<div class="wrap">
-  <div class="row">
-
-    <!-- Kamera / Upload -->
-    <div class="card">
-      <div class="title">Kamera / Upload</div>
-      <video id="video" autoplay playsinline muted></video>
-      <canvas id="captureCanvas" width="320" height="320" style="display:none"></canvas>
-
-      <div class="controls">
-        <button id="btnStart" class="btn-primary">▶ Mulai</button>
-        <button id="btnSwitch">🔄 Ganti</button>
-        <button id="btnCapture">📷 Ambil</button>
-        <label class="file" for="upload">⬆️ Upload</label>
-        <input id="upload" type="file" accept="image/*" capture="environment" style="display:none">
-        <button id="btnClear" class="btn-secondary">🧹 Reset</button>
-      </div>
-      <div class="small" style="margin-top:6px">Izinkan akses kamera. Jika tidak tersedia, gunakan Upload.</div>
+<div class="app">
+  <div class="header">
+    <img class="avatar" src="https://i.pravatar.cc/150?img=5" alt="MONTANA">
+    <div>
+      <div class="title">MONTANA AI — Chatbot Analisis Kesehatan </div>
+      <div class="sub"> Berdasarkan berbasis citra warna (HSV)</div>
     </div>
-
-    <!-- Analisis & Skor -->
-    <div class="card">
-      <div class="title">Analisis Visual & Skor</div>
-      <canvas id="displayCanvas" width="320" height="320" style="background:#eef2f7;"></canvas>
-
-      <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">
-        <div style="flex:1;min-width:180px">
-          <div class="small">Skor Kesehatan</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
-            <span id="statusChip" class="status-chip ok" style="display:none">✔ Sehat</span>
-            <span id="statusChipBad" class="status-chip bad" style="display:none">⚠ Tidak Sehat</span>
-            <div id="score" style="font-size:1.25rem;font-weight:800">—</div>
-          </div>
-          <div class="bar"><span id="scoreBar"></span></div>
-          <div id="healthLabel" class="small" style="margin-top:6px">—</div>
-        </div>
-
-        <div style="width:180px;min-width:160px">
-          <canvas id="chart" width="180" height="160"></canvas>
-        </div>
-      </div>
-
-      <div class="dominant" id="dominantBox" style="display:none"></div>
-
-      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-        <button id="btnDownloadPDF" class="btn-primary">⬇ Unduh Laporan (PDF)</button>
-      </div>
-    </div>
-
-    <!-- Rincian & Saran -->
-    <div class="card">
-      <div class="title">Rincian Hasil</div>
-      <table>
-        <thead><tr><th>Kategori</th><th>Count</th><th>%</th></tr></thead>
-        <tbody id="tableBody">
-          <tr><td><span class="legend-dot" style="background:#16a34a"></span>Hijau (Sehat)</td><td id="cntSehat">0</td><td id="pctSehat">0%</td></tr>
-          <tr><td><span class="legend-dot" style="background:#facc15"></span>Kuning</td><td id="cntKuning">0</td><td id="pctKuning">0%</td></tr>
-          <tr><td><span class="legend-dot" style="background:#a855f7"></span>Coklat</td><td id="cntCoklat">0</td><td id="pctCoklat">0%</td></tr>
-          <tr><td><span class="legend-dot" style="background:#e5e7eb;border:1px solid #cbd5e1"></span>Putih</td><td id="cntPutih">0</td><td id="pctPutih">0%</td></tr>
-          <tr><td><span class="legend-dot" style="background:#111827"></span>Hitam</td><td id="cntHitam">0</td><td id="pctHitam">0%</td></tr>
-        </tbody>
-      </table>
-
-      <div id="analysisText" class="small" style="margin-top:10px"></div>
-      <div id="controlAdvice" class="small" style="margin-top:10px"></div>
-      <div id="nutrientNote" class="small" style="margin-top:10px"></div>
+  </div>
+  <div class="banner">Unggah foto / gunakan kamera. Bot akan menilai kesehatan daun, memprediksi penyebab (penyakit/hara), dan memberi rekomendasi.</div>
+  <div id="chat" class="chat" aria-live="polite"></div>
+  <div class="bbar">
+    <div class="k-pill">Aksi cepat</div>
+    <div class="actions">
+      <label for="upload" class="action">＋ Upload</label>
+      <button id="openCam" class="action primary">📷 Kamera</button>
     </div>
   </div>
 </div>
 
-<footer>
-  MONTANA — Hasil indikatif; untuk kepastian lakukan uji laboratorium & evaluasi lapangan.
-</footer>
+<!-- hidden inputs -->
+<input id="upload" type="file" accept="image/*" capture="environment">
+
+<!-- Hidden lab (analitik) -->
+<div id="lab" aria-hidden="true">
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="captureCanvas" width="320" height="320"></canvas>
+  <canvas id="displayCanvas" width="320" height="320"></canvas>
+
+  <span id="statusChip" class="badge ok" style="display:none">✔ Sehat</span>
+  <span id="statusChipBad" class="badge bad" style="display:none">⚠ Tidak Sehat</span>
+  <span id="score">—</span>
+  <div class="progress"><span id="scoreBar"></span></div>
+  <div id="healthLabel" class="hint">—</div>
+
+  <div id="dominantBox"></div>
+  <div id="analysisText"></div>
+  <div id="controlAdvice"></div>
+  <div id="nutrientNote"></div>
+
+  <canvas id="chart" width="220" height="180"></canvas>
+
+  <table>
+    <tbody id="tableBody">
+      <tr><td><span class="legend-dot" style="background:#16a34a"></span>Hijau (Sehat)</td><td id="cntSehat">0</td><td id="pctSehat">0%</td></tr>
+      <tr><td><span class="legend-dot" style="background:#facc15"></span>Kuning</td><td id="cntKuning">0</td><td id="pctKuning">0%</td></tr>
+     <tr><td><span class="legend-dot" style="background:#8B4513"></span>Coklat</td>
+<td id="cntCoklat">0</td><td id="pctCoklat">0%</td></tr>
+      <tr><td><span class="legend-dot" style="background:#e5e7eb;border:1px solid #cbd5e1"></span>Putih</td><td id="cntPutih">0</td><td id="pctPutih">0%</td></tr>
+      <tr><td><span class="legend-dot" style="background:#111827"></span>Hitam</td><td id="cntHitam">0</td><td id="pctHitam">0%</td></tr>
+    </tbody>
+  </table>
+
+  <button id="btnStart" type="button"></button>
+  <button id="btnSwitch" type="button"></button>
+  <button id="btnCapture" type="button"></button>
+</div>
 
 <script>
-/* ----------------------- Elemen ----------------------- */
+/* ---------- Chat helpers ---------- */
+const chat = document.getElementById('chat');
+function bubble(html, who='bot'){
+  const row=document.createElement('div');
+  row.className = `row ${who}`;
+  const div=document.createElement('div');
+  div.className = `bubble ${who}`;
+  div.innerHTML = html;
+  row.appendChild(div);
+  chat.appendChild(row);
+  chat.scrollTop = chat.scrollHeight;
+  return div;
+}
+function card(html){ return bubble(`<div class="card">${html}</div>`,'bot'); }
+const sayUser = (text)=> bubble(text,'user');
+
+/* ---------- Elements (lab) ---------- */
 const video = document.getElementById('video');
 const capCanvas = document.getElementById('captureCanvas');
 const cctx = capCanvas.getContext('2d');
 const displayCanvas = document.getElementById('displayCanvas');
 const dctx = displayCanvas.getContext('2d');
 const upload = document.getElementById('upload');
-
-const btnStart = document.getElementById('btnStart');
-const btnSwitch = document.getElementById('btnSwitch');
-const btnCapture = document.getElementById('btnCapture');
-const btnClear = document.getElementById('btnClear');
-const btnDownloadPDF = document.getElementById('btnDownloadPDF');
+const chartCanvas = document.getElementById('chart');
 
 const scoreEl = document.getElementById('score');
 const scoreBar = document.getElementById('scoreBar');
 const labelEl = document.getElementById('healthLabel');
 const chipOk = document.getElementById('statusChip');
 const chipBad = document.getElementById('statusChipBad');
-const domBox = document.getElementById('dominantBox');
 
-let currentStream = null;
-let useFront = false;
-let pieChart = null;
-let gpsLocation = 'Tidak tersedia';
-let lastCounts = {sehat:0,kuning:0,coklat:0,putih:0,hitam:0};
-let lastTotal = 0;
+let currentStream=null, useFront=false, pieChart=null;
+let gpsLocation='Tidak tersedia';
 
-/* ----------------------- Kamera ----------------------- */
-async function startCamera(){
-  if (currentStream) currentStream.getTracks().forEach(t=>t.stop());
-  try{
-    const s = await navigator.mediaDevices.getUserMedia({ video:{ facingMode: useFront ? 'user':'environment' } });
-    currentStream = s; video.srcObject = s;
-  }catch(e){ alert('Gagal mengakses kamera. Gunakan Upload gambar.'); }
+/* ---------- Quick welcome ---------- */
+bubble('Halo! Kirim foto daun atau gunakan kamera. Aku akan menganalisis warna (HSV), menilai kesehatan, memprediksi penyebab (penyakit/hara), dan memberi rekomendasi ringkas.');
+
+/* ---------- Camera minimal modal in chat ---------- */
+const openCamBtn = document.getElementById('openCam');
+openCamBtn.onclick = openCameraCard;
+
+function openCameraCard(){
+  const div = card(`
+    <h4 style="margin:0 0 6px">📷 Kamera</h4>
+    <video id="live" autoplay playsinline muted style="width:100%;max-height:300px;border-radius:12px;border:1px solid var(--line);background:#0b0b0b"></video>
+    <div class="toolbar">
+      <button class="btn" id="mSwitch">🔄 Ganti</button>
+      <button class="btn primary" id="mShot">📸 Ambil</button>
+      <button class="btn" id="mStop">✖ Tutup</button>
+    </div>
+    <div class="hint">Jika gagal, cek izin kamera di browser Android.</div>
+  `);
+  const live = div.parentElement.querySelector('#live');
+  const mSwitch = div.parentElement.querySelector('#mSwitch');
+  const mShot   = div.parentElement.querySelector('#mShot');
+  const mStop   = div.parentElement.querySelector('#mStop');
+
+  async function startLive(){
+    if (currentStream) currentStream.getTracks().forEach(t=>t.stop());
+    try{
+      const s = await navigator.mediaDevices.getUserMedia({ video:{ facingMode: useFront ? 'user':'environment' } });
+      currentStream = s; live.srcObject = s;
+    }catch(e){ alert('Tidak bisa membuka kamera. Gunakan Upload.'); }
+  }
+  startLive();
+  mSwitch.onclick = ()=>{ useFront=!useFront; startLive(); };
+  mShot.onclick = ()=>{
+    if (!live.videoWidth){ alert('Kamera belum siap'); return; }
+    cctx.drawImage(live, 0, 0, capCanvas.width, capCanvas.height);
+    runAnalysis().then(renderResultToChat);
+  };
+  mStop.onclick = ()=>{ if(currentStream) currentStream.getTracks().forEach(t=>t.stop()); div.parentElement.parentElement.remove(); };
 }
-btnStart.onclick = startCamera;
-btnSwitch.onclick = ()=>{ useFront=!useFront; startCamera(); };
-btnCapture.onclick = ()=>{
-  if (!video.videoWidth) { alert('Kamera belum siap'); return; }
-  cctx.drawImage(video, 0, 0, capCanvas.width, capCanvas.height);
-  runAnalysis();
-};
 
-/* ----------------------- Upload ----------------------- */
+/* ---------- Upload ---------- */
 upload.onchange = (e)=>{
-  const f = e.target.files[0]; if(!f) return;
-  const reader = new FileReader(); const img = new Image();
-  reader.onload = ()=> img.src = reader.result;
-  img.onload = ()=>{
+  const f=e.target.files[0]; if(!f) return;
+  sayUser('⬆️ Gambar terkirim');
+  const reader=new FileReader(), img=new Image();
+  reader.onload=()=> img.src = reader.result;
+  img.onload=()=>{
     const cw=capCanvas.width, ch=capCanvas.height;
     const r=Math.min(cw/img.width, ch/img.height);
     const w=img.width*r, h=img.height*r;
     const dx=(cw-w)/2, dy=(ch-h)/2;
     cctx.fillStyle='#fff'; cctx.fillRect(0,0,cw,ch);
     cctx.drawImage(img, dx, dy, w, h);
-    runAnalysis();
+    runAnalysis().then(renderResultToChat);
   };
   reader.readAsDataURL(f);
 };
 
-/* ----------------------- Reset ----------------------- */
-btnClear.onclick = ()=>{
-  dctx.fillStyle='#eef2f7'; dctx.fillRect(0,0,displayCanvas.width,displayCanvas.height);
-  scoreEl.textContent='—'; labelEl.textContent='—';
-  chipOk.style.display='none'; chipBad.style.display='none';
-  scoreBar.style.width='0%';
-  ['Sehat','Kuning','Coklat','Putih','Hitam'].forEach(k=>{
-    document.getElementById('cnt'+k).textContent='0';
-    document.getElementById('pct'+k).textContent='0%';
-  });
-  domBox.style.display='none'; domBox.innerHTML='';
-  ['analysisText','controlAdvice','nutrientNote'].forEach(id=>document.getElementById(id).innerHTML='');
-  if (pieChart) { pieChart.destroy(); pieChart=null; }
-  lastCounts = {sehat:0,kuning:0,coklat:0,putih:0,hitam:0}; lastTotal=0;
-};
-
-/* ------------------- Helper: RGB->HSV ------------------ */
+/* ---------- Analysis ---------- */
 function rgbToHsv(r,g,b){
   r/=255; g/=255; b/=255;
   const max=Math.max(r,g,b), min=Math.min(r,g,b);
@@ -218,23 +237,17 @@ function rgbToHsv(r,g,b){
   }
   return [h,Math.round(s*100),Math.round(v*100)];
 }
-
-/* ----------------------- Analisis ---------------------- */
+function overlaySoft(){ dctx.fillStyle='rgba(34,197,94,0.12)'; dctx.fillRect(0,0,displayCanvas.width,displayCanvas.height); }
 function runAnalysis(){
   dctx.drawImage(capCanvas,0,0,displayCanvas.width,displayCanvas.height);
-
   const w=capCanvas.width,h=capCanvas.height;
   const img=cctx.getImageData(0,0,w,h); const d=img.data;
   const cnt={sehat:0,kuning:0,coklat:0,putih:0,hitam:0}; let total=0;
-
-  // sampling adaptif: lompat 2 piksel
   for (let i=0;i<d.length;i+=8){
     const r=d[i], g=d[i+1], b=d[i+2], a=d[i+3];
     if (a===0) continue;
     const [H,S,V]=rgbToHsv(r,g,b);
-    // Filter background putih terang / gelap
     if ((V>90 && S<20) || (V<10)) continue;
-
     total++;
     if (H>=60 && H<=160 && S>25 && V>25) cnt.sehat++;
     else if (H>=20 && H<60 && S>20 && V>30) cnt.kuning++;
@@ -243,82 +256,175 @@ function runAnalysis(){
     else if (V<=15) cnt.hitam++;
     else cnt.coklat++;
   }
-
-  lastCounts=cnt; lastTotal=total;
   overlaySoft(); updateCounts(cnt,total); computeHealthAndAdvice(cnt,total);
+  return Promise.resolve();
 }
-
-/* --------------- Overlay lembut tampilan --------------- */
-function overlaySoft(){ dctx.fillStyle='rgba(34,197,94,0.12)'; dctx.fillRect(0,0,displayCanvas.width,displayCanvas.height); }
-
-/* ----------------- Update tabel & chart ---------------- */
 function updateCounts(cnt,total){
   const pct=k=> total?(cnt[k]/total*100):0;
-  [['Sehat','sehat'],['Kuning','kuning'],['Coklat','coklat'],['Putih','putih'],['Hitam','hitam']]
-  .forEach(([L,K])=>{
+  const pairs=[['Sehat','sehat'],['Kuning','kuning'],['Coklat','coklat'],['Putih','putih'],['Hitam','hitam']];
+  pairs.forEach(([L,K])=>{
     document.getElementById('cnt'+L).textContent=cnt[K].toLocaleString();
     document.getElementById('pct'+L).textContent=pct(K).toFixed(2)+'%';
   });
-
-  const ctxc=document.getElementById('chart').getContext('2d');
-  if (pieChart) pieChart.destroy();
-  pieChart=new Chart(ctxc,{type:'doughnut',
+  if (pieChart) { try{ pieChart.destroy(); }catch(e){} }
+  pieChart=new Chart(chartCanvas.getContext('2d'),{type:'doughnut',
     data:{labels:['Hijau','Kuning','Coklat','Putih','Hitam'],
       datasets:[{data:[pct('sehat'),pct('kuning'),pct('coklat'),pct('putih'),pct('hitam')],
-        backgroundColor:['#16a34a','#facc15','#a855f7','#e5e7eb','#111827'],borderWidth:0}]},
-    options:{cutout:'62%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:(c)=>`${c.label}: ${c.parsed.toFixed(2)}%`}}}}
+        backgroundColor:['#16a34a','#facc15','#b45309','#e5e7eb','#111827']
+,borderWidth:0}]},
+    options:{responsive:false,animation:false,cutout:'62%',plugins:{legend:{display:false}}}
   });
 }
-
-/* ------- Skor + Narasi Dominan + Saran variatif ------- */
 function computeHealthAndAdvice(cnt,total){
   const pct=k=> total?(cnt[k]/total*100):0;
   const pHijau=pct('sehat');
-  const others=pct('kuning')+pct('coklat')+pct('putih')+pct('hitam');
+  const pKuning=pct('kuning'), pCoklat=pct('coklat'), pPutih=pct('putih'), pHitam=pct('hitam');
+  const others=pKuning+pCoklat+pPutih+pHitam;
   let score=pHijau-0.7*others; score=Math.max(0,Math.min(100,score));
-
   scoreEl.textContent=score.toFixed(2);
   scoreBar.style.width = `${score}%`;
   if (score>50){ chipOk.style.display='inline-flex'; chipBad.style.display='none'; labelEl.innerHTML=`Status: <b>Sehat</b>`; }
   else{ chipOk.style.display='none'; chipBad.style.display='inline-flex'; labelEl.innerHTML=`Status: <b>Tidak Sehat</b>`; }
 
-  const categories={'Hijau (Sehat)':pHijau,'Kuning':pct('kuning'),'Coklat':pct('coklat'),'Putih':pct('putih'),'Hitam':pct('hitam')};
+  const categories={'Hijau (Sehat)':pHijau,'Kuning':pKuning,'Coklat':pCoklat,'Putih':pPutih,'Hitam':pHitam};
   const dominant=Object.keys(categories).reduce((a,b)=>categories[a]>categories[b]?a:b);
-  const domVal=categories[dominant].toFixed(2); const totalPix=total.toLocaleString();
+  const domVal=categories[dominant].toFixed(2);
+  const rec = diseaseRecommendation(dominant, {pHijau,pKuning,pCoklat,pPutih,pHitam,score});
 
-  const intro=`Warna dominan adalah <b>${dominant}</b> dengan persentase sekitar <b>${domVal}%</b> dari <b>${totalPix}</b> piksel daun. `;
-  let diagTitle='', cause='', control='', nutrient=''; const pick=a=>a[Math.floor(Math.random()*a.length)];
-
-  if (dominant==='Hijau (Sehat)'){ diagTitle='Tanaman dalam kondisi fisiologis optimal.'; cause='Klorofil memadai dan fotosintesis baik.';
-    control=pick(['Pertahankan pola pemupukan & penyiraman.','Pantau daun muda untuk cegah klorosis dini.','Jaga sanitasi dan hindari genangan.']);
-    nutrient='Nutrisi makro & mikro seimbang; uji tanah tiap 3–6 bulan.';}
-  else if (dominant==='Kuning'){ diagTitle='Klorosis — defisiensi N/Mg atau stres akar.'; cause='Kekurangan N/Mg atau drainase buruk.';
-    control=pick(['Tambahkan pupuk N bertahap.','Perbaiki drainase area akar.','Semprot MgSO₄ 0.5% bila gejala antar tulang.']);
-    nutrient='Lakukan uji jaringan untuk konfirmasi N & Mg.';}
-  else if (dominant==='Coklat'){ diagTitle='Nekrosis/bercak coklat — jamur atau defisiensi K.'; cause='Alternaria/Botrytis atau kekurangan K.';
-    control=pick(['Aplikasikan mankozeb/klorotalonil.','Tambah KCl/K₂SO₄.','Gunakan paranet saat radiasi tinggi.']);
-    nutrient='Kalium memperkuat dinding sel & toleransi stres.';}
-  else if (dominant==='Putih'){ diagTitle='Bercak/lapisan putih — powdery mildew atau residu.'; cause='Erysiphales pada RH sedang–tinggi atau residu foliar.';
-    control=pick(['Gunakan sulfur/kalium bikarbonat pagi/sore.','Tingkatkan sirkulasi udara.','Hindari semprot saat panas terik.']);
-    nutrient='Perhatikan mikro Zn & Mn untuk ketahanan.';}
-  else { diagTitle='Bercak hitam — bakteri/nekrosis berat.'; cause='Jaringan mati; kelembapan tinggi memperparah.';
-    control=pick(['Singkirkan & musnahkan daun sakit.','Gunakan bakterisida tembaga.','Perbaiki aerasi tajuk.']);
-    nutrient='Pastikan Ca & Si cukup untuk memperkuat jaringan.';}
-
-  if (score<40) control+=' ⚠️ Skor sangat rendah — lakukan uji lab tanah & jaringan.';
-
-  domBox.style.display='block'; domBox.innerHTML=intro;
-  document.getElementById('analysisText').innerHTML=`<b>${diagTitle}</b><div style="margin-top:6px">${intro}${cause}</div>`;
-  document.getElementById('controlAdvice').innerHTML=`<b>Rekomendasi Pengendalian:</b><div style="margin-top:6px">${control}</div>`;
-  document.getElementById('nutrientNote').innerHTML=`<b>Catatan Nutrisi:</b><div style="margin-top:6px">${nutrient}</div>`;
-
-  // simpan data untuk PDF
+  // simpan untuk PDF
   window.analysisData = {
-    sehat: pHijau.toFixed(2), kuning: pct('kuning').toFixed(2),
-    coklat: pct('coklat').toFixed(2), putih: pct('putih').toFixed(2),
-    hitam: pct('hitam').toFixed(2), totalPixels: total,
-    score: score.toFixed(2), dominant, dominantPct: domVal
+    sehat: pHijau.toFixed(2), kuning: pKuning.toFixed(2),
+    coklat: pCoklat.toFixed(2), putih: pPutih.toFixed(2),
+    hitam: pHitam.toFixed(2), totalPixels: total,
+    score: score.toFixed(2), dominant, dominantPct: domVal,
+    diagnosis: rec.title, actions: rec.actions.join('\n')
   };
+  window._lastRecommendation = rec;
+}
+/* ---------- Penyakit/Hara Recommender ---------- */
+function diseaseRecommendation(dominant){
+  if (dominant==='Kuning'){
+    return {
+      title:'Klorosis (defisiensi N/Mg/Fe) atau stres akar',
+      causes:[
+        'Kekurangan N → daun kuning merata (tua duluan)',
+        'Kekurangan Mg → kuning antar tulang, tulang tetap hijau',
+        'Akar tergenang → klorosis menyebar cepat'
+      ],
+      actions:[
+        'Tambahkan pupuk N bertahap (mis. 10–20 g Urea/tanaman, bagi 2–3 kali)',
+        'Semprot MgSO₄ 0.5% pada daun 1–2 kali/minggu bila gejala antar tulang',
+        'Perbaiki drainase dan kurangi penyiraman sampai media gembur'
+      ]
+    };
+  }
+  if (dominant==='Coklat'){
+    return {
+      title:'Bercak daun jamur (Alternaria/Antraknosa) atau defisiensi Kalium',
+      causes:[
+        'Bercak coklat/tepi nekrosis → infeksi jamur',
+        'Pinggir daun mengering/terbakar → kekurangan K'
+      ],
+      actions:[
+        'Semprot fungisida protektif (mankozeb/klorotalonil) 5–7 hari sekali (pagi/sore)',
+        'Tambahkan KCl/K₂SO₄ dosis ringan; hindari kelebihan N',
+        'Buang daun terinfeksi parah, tingkatkan sirkulasi udara'
+      ]
+    };
+  }
+  if (dominant==='Putih'){
+    return {
+      title:'Powdery mildew (embun tepung) atau residu semprotan',
+      causes:[
+        'Lapisan putih keabu pada permukaan daun',
+        'RH sedang–tinggi & sirkulasi buruk memperparah'
+      ],
+      actions:[
+        'Gunakan sulfur atau kalium bikarbonat (pagi/sore)',
+        'Tingkatkan aerasi tajuk, hindari penyiraman mengenai daun',
+        'Bersihkan residu dengan semprot air bersih halus'
+      ]
+    };
+  }
+  if (dominant==='Hitam'){
+    return {
+      title:'Hawar bakteri / nekrosis berat',
+      causes:[
+        'Bercak hitam tidak beraturan, jaringan mati',
+        'Kelembapan tinggi & luka mekanik memperparah'
+      ],
+      actions:[
+        'Pangkas dan musnahkan daun terinfeksi',
+        'Aplikasikan bakterisida berbasis tembaga sesuai label',
+        'Kurangi kelembapan, tingkatkan sirkulasi udara'
+      ]
+    };
+  }
+  return {
+    title:'Kondisi fisiologis stabil',
+    causes:['Mayoritas hijau, aktivitas fotosintesis baik.'],
+    actions:['Pertahankan pemupukan & penyiraman seimbang','Monitoring mingguan']
+  };
+}
+
+/* ---------- Hasil ke Chat ---------- */
+function renderResultToChat(){
+  const a = window.analysisData || {score:'0',dominant:'-',dominantPct:'0'};
+  const photo = displayCanvas.toDataURL('image/png',0.9);
+  // pastikan chart sudah dirender
+  const ensureChartReady = ()=>{
+    try{ return chartCanvas.toDataURL('image/png',0.95); }
+    catch(e){ return ''; }
+  };
+  let chartURL = ensureChartReady();
+  if (!chartURL || chartURL.length<50){
+    // delay satu frame jika canvas belum siap
+    setTimeout(()=>{
+      const url2 = ensureChartReady();
+      buildCard(url2);
+    }, 30);
+  } else {
+    buildCard(chartURL);
+  }
+
+  function buildCard(cURL){
+    const tableRows = Array.from(document.querySelectorAll('#tableBody tr')).map(tr=>{
+      const t=tr.querySelectorAll('td'); return `<tr><td>${t[0].innerText}</td><td>${t[1].innerText}</td><td>${t[2].innerText}</td></tr>`;
+    }).join('');
+    const statusGood = parseFloat(a.score) > 50;
+    const rec = window._lastRecommendation || {title:'—', causes:[], actions:[]};
+
+    card(`
+      <h4 style="margin:0 0 6px">🧪 Hasil Analisis</h4>
+      <img src="${photo}" class="thumb" alt="Hasil Analisis">
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
+        <span class="badge ${statusGood?'ok':'bad'}">${statusGood?'✔ Sehat':'⚠ Tidak Sehat'}</span>
+        <div style="font-size:1.1rem;font-weight:800">Skor: ${a.score}</div>
+      </div>
+      <div class="progress"><span style="width:${a.score}%"></span></div>
+      <div class="hint" style="margin-top:6px">Dominan: <b>${a.dominant}</b> (${a.dominantPct}%)</div>
+
+      ${cURL?`<div style="margin-top:8px"><img src="${cURL}" alt="Diagram Warna" style="width:100%;max-width:320px;border-radius:10px;display:block;margin:auto"></div>`:''}
+
+      <table class="table" style="margin-top:8px">
+        <thead><tr><th>Kategori</th><th>Count</th><th>%</th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+
+      <div style="margin-top:10px">
+        <div class="k-pill">🩺 Dugaan: <b>${rec.title}</b></div>
+        ${rec.causes?.length?`<div class="hint" style="margin-top:6px"><b>Penyebab yang mungkin:</b><ul style="margin:6px 0 0 18px">${rec.causes.map(c=>`<li>${c}</li>`).join('')}</ul></div>`:''}
+        ${rec.actions?.length?`<div class="hint" style="margin-top:6px"><b>Rekomendasi Tindakan:</b><ul style="margin:6px 0 0 18px">${rec.actions.map(c=>`<li>${c}</li>`).join('')}</ul></div>`:''}
+      </div>
+
+      <div class="toolbar">
+        <button class="btn primary" id="dlPdf">⬇ Unduh PDF</button>
+      </div>
+    `);
+    const btns = chat.querySelectorAll('#dlPdf');
+    const lastBtn = btns[btns.length-1];
+    if (lastBtn) lastBtn.onclick = generatePDF;
+  }
 }
 
 /* ----------------------- Geolokasi --------------------- */
@@ -342,16 +448,8 @@ function getBWChartDataURL(){
   return tmp.toDataURL('image/png',1.0);
 }
 
-/* --------- Helper PDF: tulis paragraf dinamis ---------- */
-function writeParagraph(doc, text, left, y, width=495, size=10, lineGap=2){
-  doc.setFontSize(size);
-  const lines = doc.splitTextToSize(text, width);
-  doc.text(lines, left, y);
-  return y + lines.length * (size + lineGap/2);
-}
-
-// =============== PDF GENERATOR OTOMATIS & TEKNIS ===============
-btnDownloadPDF.onclick = async () => {
+// =============== PDF GENERATOR OTOMATIS & TEKNIS (KODE BARU) ===============
+async function generatePDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const left = 50, right = 545;
@@ -371,7 +469,7 @@ btnDownloadPDF.onclick = async () => {
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255);
   doc.setFontSize(13);
-  doc.text('LAPORAN ANALISIS KESEHATAN DAUN — TEKNIS LAPANGAN (BW)', 50, 28);
+  doc.text('LAPORAN ANALISIS KESEHATAN DAUN', 50, 28);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(240);
   doc.setFontSize(10);
@@ -435,7 +533,7 @@ btnDownloadPDF.onclick = async () => {
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(9);
   doc.setTextColor(80);
-  doc.text('MONTANA HALAMAN  — Analisis piksel bersifat indikatif; uji laboratorium tetap lebih akurat.', left, 825);
+  doc.text('MONTANA AI HALAMAN 2 — Analisis piksel bersifat indikatif; uji laboratorium tetap lebih akurat.', left, 825);
 
   /* ================= HALAMAN 2 ================= */
   doc.addPage();
@@ -444,105 +542,72 @@ btnDownloadPDF.onclick = async () => {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.text(title, left, y2);
-    y2 += 10;
+    y2 += 15;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.5);
     const lines = doc.splitTextToSize(text, 495);
     doc.text(lines, left, y2);
-    y2 += lines.length * 14;
+    y2 += (lines.length * 14) + 10;
   }
 
   /* ================= DASAR ILMIAH ================= */
   writeBlock('Dasar Ilmiah Dan Metodologi Analisis',
-  `Analisis kesehatan daun berbasis piksel merupakan metode non-destruktif untuk menilai kondisi fisiologis tanaman di lapangan tanpa perlu memetik daun. 
-Pendekatan ini mengonversi ruang warna RGB HSV (Hue, Saturation, Value), karena HSV lebih stabil terhadap variasi cahaya dan kontras kamera. 
-Setiap piksel citra (320×320) dianalisis untuk menentukan kategori warnanya dengan ambang Hue, Saturation, dan Value yang telah dikalibrasi lapangan.`);
+  `Analisis kesehatan daun berbasis piksel merupakan metode non-destruktif untuk menilai kondisi fisiologis tanaman di lapangan tanpa perlu memetik daun. Pendekatan ini mengonversi ruang warna RGB ke HSV (Hue, Saturation, Value), karena HSV lebih stabil terhadap variasi cahaya dan kontras kamera. Setiap piksel citra (320×320) dianalisis untuk menentukan kategori warnanya dengan ambang Hue, Saturation, dan Value yang telah dikalibrasi lapangan.`);
 
   /* ================= KLASIFIKASI WARNA ================= */
   writeBlock('Prinsip Klasifikasi Warna',
-  `Hijau (Sehat): Hue 60–160°, S>25%, V>25% : jaringan aktif, klorofil tinggi.
-Kuning: Hue 20–60°, S>20%, V>30% : indikasi defisiensi N atau Mg.
-Coklat: Hue 0–40°, S>25%, V<70% :nekrosis jaringan atau jamur.
-Putih: S<20%, V>85%  : residu pestisida atau pantulan cahaya.
-Hitam: V<15% : jaringan mati atau kelembapan ekstrem.`);
+  `Hijau (Sehat): Hue 60–160°, S>25%, V>25% : jaringan aktif, klorofil tinggi.\nKuning: Hue 20–60°, S>20%, V>30% : indikasi defisiensi N atau Mg.\nCoklat: Hue 0–40°, S>25%, V<70% :nekrosis jaringan atau jamur.\nPutih: S<20%, V>85%  : residu pestisida atau pantulan cahaya.\nHitam: V<15% : jaringan mati atau kelembapan ekstrem.`);
 
   /* ================= RUMUS ================= */
   writeBlock('Rumus Penilaian Skor Kesehatan',
-  `H = P_hijau  0.7 × (P_kuning + P_coklat + P_putih + P_hitam)
-Bobot koreksi 0.7 menurunkan pengaruh warna non-hijau. 
-Rentang nilai H: 0–100, di mana:
-H > 80  Sangat Sehat | 60-79 : Sehat | 40-59 : Mulai Stres | <40 : Tidak Sehat.`);
+  `H = P_hijau - 0.7 × (P_kuning + P_coklat + P_putih + P_hitam)\nBobot koreksi 0.7 menurunkan pengaruh warna non-hijau. Rentang nilai H: 0–100, di mana:\nH > 80  Sangat Sehat | 60-79 : Sehat | 40-59 : Mulai Stres | <40 : Tidak Sehat.`);
 
   /* ================= INTERPRETASI OTOMATIS ================= */
   let interpretasi = '';
-  if (a.dominant.includes('Coklat')) interpretasi = 'Daun menunjukkan dominasi coklat menandakan defisiensi K dan stres lingkungan.';
-  else if (a.dominant.includes('Kuning')) interpretasi = 'Daun mengalami klorosis ringan akibat defisiensi N/Mg atau drainase buruk.';
-  else if (a.dominant.includes('Putih')) interpretasi = 'Kemungkinan terdapat residu semprotan atau powdery mildew.';
-  else if (a.dominant.includes('Hitam')) interpretasi = 'Jaringan nekrotik akibat kelembapan ekstrem atau infeksi bakteri.';
+  const dom = a.dominant || '';
+  if (dom.includes('Coklat')) interpretasi = 'Daun menunjukkan dominasi coklat menandakan defisiensi K dan stres lingkungan.';
+  else if (dom.includes('Kuning')) interpretasi = 'Daun mengalami klorosis ringan akibat defisiensi N/Mg atau drainase buruk.';
+  else if (dom.includes('Putih')) interpretasi = 'Kemungkinan terdapat residu semprotan atau powdery mildew.';
+  else if (dom.includes('Hitam')) interpretasi = 'Jaringan nekrotik akibat kelembapan ekstrem atau infeksi bakteri.';
   else interpretasi = 'Daun dalam kondisi fisiologis stabil dengan aktivitas fotosintesis baik.';
 
   writeBlock('Interpretasi & Keterbatasan',
-  `${interpretasi} Nilai skor ${a.score} (${statusTxt}). 
-Hasil bersifat indikatif dan dapat dipengaruhi oleh intensitas cahaya, kualitas kamera, kondisi daun, dan faktor genetik. 
-Gunakan hasil ini sebagai deteksi dini sebelum uji jaringan dan analisis tanah untuk konfirmasi laboratorium.`);
+  `${interpretasi} Nilai skor ${a.score} (${statusTxt}). Hasil bersifat indikatif dan dapat dipengaruhi oleh intensitas cahaya, kualitas kamera, kondisi daun, dan faktor genetik. Gunakan hasil ini sebagai deteksi dini sebelum uji jaringan dan analisis tanah untuk konfirmasi laboratorium.`);
 
   /* ================= KESIMPULAN OTOMATIS ================= */
   let tindakan = '';
-  if (a.dominant.includes('Coklat'))
-    tindakan = `• Aplikasi pupuk dosis rendah (1-2 g/liter)
-• Penyemprotan fungisida mankozeb/klorotalonil mingguan
-• Pemantauan visual tiap 3–5 hari`;
-  else if (a.dominant.includes('Kuning'))
-    tindakan = `• Tambah pupuk N dan Mg
-• Pastikan drainase baik
-• Uji jaringan daun untuk verifikasi nutrisi`;
-  else if (a.dominant.includes('Hitam'))
-    tindakan = `• Buang daun rusak
-• Aplikasikan bakterisida tembaga
-• Tingkatkan sirkulasi udara`;
+  if (dom.includes('Coklat'))
+    tindakan = `• Aplikasi pupuk dosis rendah (1-2 g/liter)\n• Penyemprotan fungisida mankozeb/klorotalonil mingguan\n• Pemantauan visual tiap 3–5 hari`;
+  else if (dom.includes('Kuning'))
+    tindakan = `• Tambah pupuk N dan Mg\n• Pastikan drainase baik\n• Uji jaringan daun untuk verifikasi nutrisi`;
+  else if (dom.includes('Hitam'))
+    tindakan = `• Buang daun rusak\n• Aplikasikan bakterisida tembaga\n• Tingkatkan sirkulasi udara`;
   else
-    tindakan = `• Pertahankan pola pemupukan
-• Monitoring rutin sistem MONTANA
-• Uji jaringan daun per 3 bulan`;
+    tindakan = `• Pertahankan pola pemupukan\n• Monitoring rutin sistem MONTANA\n• Uji jaringan daun per 3 bulan`;
 
   writeBlock('Kesimpulan Teknis Lapangan',
-  `Berdasarkan analisis piksel metode HSV Color Segmentation, tanaman pada titik pengamatan menunjukkan skor ${a.score} (${statusTxt}). 
-Warna dominan ${a.dominant} (${a.dominantPct}%) menjadi indikator kondisi fisiologis utama.
-Tindakan korektif disarankan:
-${tindakan}`);
+  `Berdasarkan analisis piksel metode HSV Color Segmentation, tanaman pada titik pengamatan menunjukkan skor ${a.score} (${statusTxt}). Warna dominan ${a.dominant} (${a.dominantPct}%) menjadi indikator kondisi fisiologis utama.\nTindakan korektif disarankan:\n${tindakan}`);
 
   /* ================= SPESIFIKASI & REFERENSI ================= */
   writeBlock('Spesifikasi Teknis Sistem',
-  `Algoritma: HSV Color Segmentation v1.4
-Resolusi Analisis: 320×320 piksel
-Sampling: setiap 2 piksel
-Toleransi HSV: ±5%
-Perangkat: Kamera Android (Auto WB aktif)
-Platform: Sistem MONTANA v2.1`);
+  `Algoritma: HSV Color Segmentation v1.4\nResolusi Analisis: 320×320 piksel\nSampling: setiap 2 piksel\nToleransi HSV: ±5%\nPerangkat: Kamera Android (Auto WB aktif)\nPlatform: Sistem MONTANA v2.1`);
 
   writeBlock('Referensi Ilmiah',
-  `Richardson, A.D. et al. (2002). Remote Sensing of Environment.
-Mahajan, G., Pandey, R. (2014). Agricultural Science Journal.
-Adi, D. et al. (2020). Jurnal Agroteknologi Indonesia.
-Li, Q. et al. (2022). Precision Agriculture.
-Taiz, L., Zeiger, E. (2015). Plant Physiology and Development.`);
+  `Richardson, A.D. et al. (2002). Remote Sensing of Environment.\nMahajan, G., Pandey, R. (2014). Agricultural Science Journal.\nAdi, D. et al. (2020). Jurnal Agroteknologi Indonesia.\nLi, Q. et al. (2022). Precision Agriculture.\nTaiz, L., Zeiger, E. (2015). Plant Physiology and Development.`);
 
-  writeBlock(' Verifikasi Teknis',
-  `Diverifikasi oleh: Syahrudin
-Jabatan: Teknisi Rehabilitasi & Revegetasi
-Tanggal Verifikasi: ${waktu.split(',')[0]}`);
+  writeBlock('Verifikasi Teknis',
+  `Diverifikasi oleh: Syahrudin\nJabatan: Gl Nursery \nTanggal Verifikasi: ${waktu.split(',')[0]}`);
 
-  /* ================= FOOTER ================= */
+  /* ================= FOOTER 2 ================= */
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(9);
-  doc.text('MONTANA — Halaman 1: Analisis Uji Laboratorium tetap lebih akurat', left, 825);
+  doc.text('MONTANA AI Halaman 2: Referensi Teknis', left, 825);
 
   doc.save(`laporan_kesehatan_daun_${reportId}.pdf`);
-};
+}
 
-
-/* Init canvas */
-dctx.fillStyle='#eef2f7'; dctx.fillRect(0,0,displayCanvas.width,displayCanvas.height);
+/* ---------- Init ---------- */
+dctx.fillStyle='#0f1620'; dctx.fillRect(0,0,displayCanvas.width,displayCanvas.height);
 </script>
 </body>
 </html>
