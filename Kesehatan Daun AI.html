@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-<title>MONTANA — Chatbot Analisis Daun</title>
+<title>MONTANA — Chatbot Analisis Daun (Mobile Dark)</title>
 
 <!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -76,8 +76,8 @@ input[type=file]{display:none}
   <div class="header">
     <img class="avatar" src="https://i.pravatar.cc/150?img=5" alt="MONTANA">
     <div>
-      <div class="title">MONTANA AI — Chatbot Analisis Kesehatan </div>
-      <div class="sub"> Berdasarkan berbasis citra warna (HSV)</div>
+      <div class="title">MONTANA — Chatbot Analisis Daun</div>
+      <div class="sub">Ramah Android • Rekomendasi Penyakit Otomatis</div>
     </div>
   </div>
   <div class="banner">Unggah foto / gunakan kamera. Bot akan menilai kesehatan daun, memprediksi penyebab (penyakit/hara), dan memberi rekomendasi.</div>
@@ -92,7 +92,7 @@ input[type=file]{display:none}
 </div>
 
 <!-- hidden inputs -->
-<input id="upload" type="file" accept="image/*" capture="environment">
+<input id="upload" type="file" accept="image/*">
 
 <!-- Hidden lab (analitik) -->
 <div id="lab" aria-hidden="true">
@@ -117,8 +117,7 @@ input[type=file]{display:none}
     <tbody id="tableBody">
       <tr><td><span class="legend-dot" style="background:#16a34a"></span>Hijau (Sehat)</td><td id="cntSehat">0</td><td id="pctSehat">0%</td></tr>
       <tr><td><span class="legend-dot" style="background:#facc15"></span>Kuning</td><td id="cntKuning">0</td><td id="pctKuning">0%</td></tr>
-     <tr><td><span class="legend-dot" style="background:#8B4513"></span>Coklat</td>
-<td id="cntCoklat">0</td><td id="pctCoklat">0%</td></tr>
+      <tr><td><span class="legend-dot" style="background:#a855f7"></span>Coklat</td><td id="cntCoklat">0</td><td id="pctCoklat">0%</td></tr>
       <tr><td><span class="legend-dot" style="background:#e5e7eb;border:1px solid #cbd5e1"></span>Putih</td><td id="cntPutih">0</td><td id="pctPutih">0%</td></tr>
       <tr><td><span class="legend-dot" style="background:#111827"></span>Hitam</td><td id="cntHitam">0</td><td id="pctHitam">0%</td></tr>
     </tbody>
@@ -269,8 +268,7 @@ function updateCounts(cnt,total){
   pieChart=new Chart(chartCanvas.getContext('2d'),{type:'doughnut',
     data:{labels:['Hijau','Kuning','Coklat','Putih','Hitam'],
       datasets:[{data:[pct('sehat'),pct('kuning'),pct('coklat'),pct('putih'),pct('hitam')],
-        backgroundColor:['#16a34a','#facc15','#b45309','#e5e7eb','#111827']
-,borderWidth:0}]},
+        backgroundColor:['#16a34a','#facc15','#a855f7','#e5e7eb','#111827'],borderWidth:0}]},
     options:{responsive:false,animation:false,cutout:'62%',plugins:{legend:{display:false}}}
   });
 }
@@ -468,7 +466,7 @@ async function generatePDF() {
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255);
   doc.setFontSize(13);
-  doc.text('LAPORAN ANALISIS KESEHATAN DAUN', 50, 28);
+  doc.text('LAPORAN ANALISIS KESEHATAN DAUN — TEKNIS LAPANGAN (BW)', 50, 28);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(240);
   doc.setFontSize(10);
@@ -532,7 +530,7 @@ async function generatePDF() {
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(9);
   doc.setTextColor(80);
-  doc.text('MONTANA AI HALAMAN 2 — Analisis piksel bersifat indikatif; uji laboratorium tetap lebih akurat.', left, 825);
+  doc.text('MONTANA HALAMAN  — Analisis piksel bersifat indikatif; uji laboratorium tetap lebih akurat.', left, 825);
 
   /* ================= HALAMAN 2 ================= */
   doc.addPage();
@@ -595,12 +593,12 @@ async function generatePDF() {
   `Richardson, A.D. et al. (2002). Remote Sensing of Environment.\nMahajan, G., Pandey, R. (2014). Agricultural Science Journal.\nAdi, D. et al. (2020). Jurnal Agroteknologi Indonesia.\nLi, Q. et al. (2022). Precision Agriculture.\nTaiz, L., Zeiger, E. (2015). Plant Physiology and Development.`);
 
   writeBlock('Verifikasi Teknis',
-  `Diverifikasi oleh: Syahrudin\nJabatan: Gl Nursery \nTanggal Verifikasi: ${waktu.split(',')[0]}`);
+  `Diverifikasi oleh: Syahrudin\nJabatan: Teknisi Rehabilitasi & Revegetasi\nTanggal Verifikasi: ${waktu.split(',')[0]}`);
 
   /* ================= FOOTER 2 ================= */
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(9);
-  doc.text('MONTANA AI Halaman 2: Referensi Teknis', left, 825);
+  doc.text('MONTANA — Halaman 2: Referensi Teknis', left, 825);
 
   doc.save(`laporan_kesehatan_daun_${reportId}.pdf`);
 }
@@ -610,4 +608,3 @@ dctx.fillStyle='#0f1620'; dctx.fillRect(0,0,displayCanvas.width,displayCanvas.he
 </script>
 </body>
 </html>
-
